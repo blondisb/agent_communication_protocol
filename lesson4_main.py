@@ -18,7 +18,8 @@ client = Groq()
 server = Server()
 
 llm = LLM(
-    model="groq/llama-3.3-70b-versatile",
+    # model="groq/llama-3.3-70b-versatile",
+    model="groq/compound-beta",
     max_tokens=1024
 )
 
