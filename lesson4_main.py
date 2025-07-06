@@ -5,28 +5,34 @@ from acp_sdk.server import RunYield, RunYieldResume, Server
 
 from crewai import Crew, Task, Agent, LLM
 from crewai_tools import RagTool
-import warnings
 
+from groq import Groq
+import warnings
+import os
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv(), override=True)  # Load API key from environment variable
 warnings.filterwarnings("ignore")
 
+client = Groq()
 server = Server()
 
 llm = LLM(
-    model="openai/gpt-4",
+    model="groq/llama-3.3-70b-versatile",
     max_tokens=1024
 )
 
 config = {
     "llm": {
-        "provider": "openai",
+        "provider": "groq",
         "config": {
-            "model": "gpt-4",
+            "model": "llama-3.3-70b-versatile",
         }
     },
-    "embedding_model": {
-        "provider": "openai",
+    "embedder": {
+        "provider": "ollama",
         "config": {
-            "model": "text-embedding-ada-002"
+            "model": "nomic-embed-text",
         }
     }
 }
@@ -96,7 +102,7 @@ async def function_engineer_agent(input: list[Message]) -> AsyncGenerator[RunYie
     
 if __name__ == "__main__":
     # Start the server
-    server.run(port=8000)
+    server.run(port=8001)
     
     
     # For execute the server in a python script, you may use the following command:

@@ -1,0 +1,14 @@
+// http://localhost:8001/runs
+
+{
+  "agent_name": "function_engineer_agent",
+  "input": [
+    {
+      "parts": [
+        {
+          "content": "What is the best way to design a communication protocol for agents to communicate with each other and with humans?"
+        }
+      ]
+    }
+  ]
+}
