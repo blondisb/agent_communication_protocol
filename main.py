@@ -1,25 +1,49 @@
 from crewai import Crew, Task, Agent, LLM
 from crewai_tools import RagTool
+from groq import Groq
 import warnings
+import os
+from dotenv import load_dotenv, find_dotenv
 
+load_dotenv(find_dotenv(), override=True)  # Load API key from environment variable
+client = Groq()
 warnings.filterwarnings("ignore")
 
 llm = LLM(
-    model="openai/gpt-4",
+    model="groq/llama-3.3-70b-versatile",
+    # model="openai/gpt-4.1-nano-2025-04-14",
     max_tokens=1024
 )
 
+# config = {
+#     "llm": {
+#         "provider": "openai",
+#         "config": {
+#             "model": "gpt-4.1",
+#         }
+#     },
+#     "embedding_model": {
+#         "provider": "openai",
+#         "config": {
+#             "model": "text-embedding-ada-002"
+#         }
+#     }
+# }
+
+# https://docs.crewai.com/en/concepts/llms#groq
+
 config = {
     "llm": {
-        "provider": "openai",
+        "provider": "groq",
         "config": {
-            "model": "gpt-4",
+            "model": "llama-3.3-70b-versatile",
         }
     },
-    "embedding_model": {
-        "provider": "openai",
+    "embedder": {
+        "provider": "ollama",
         "config": {
-            "model": "text-embedding-ada-002"
+            "model": "nomic-embed-text",
+            # "base_url":"http://localhost:11434/api/embeddings",
         }
     }
 }
