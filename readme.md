@@ -5,8 +5,36 @@ OLLAMA
     Steps:
 
     Pull model from Ollama, in powershell
-    - execute server
-    - test model
+    # command to pull
+        > ollama pull nomic-embed-text
+
+    # command to start
+        > execute server
+    
+     # test embedding:
+        > $body = @{
+                model = "nomic-embed-text"
+                prompt = "This is an example sentence to embed."
+            } | ConvertTo-Json
+
+            $response = Invoke-RestMethod -Uri "http://localhost:11434/api/embeddings" `
+                                        -Method Post `
+                                        -Body $body `
+                                        -ContentType "application/json"
+
+
+    # Powershell command to validate if Ollama server is running
+    Get-Process -Name "ollama" -ErrorAction SilentlyContinue
+
+    # Or check if the Ollama API is responding
+    try {
+        $response = Invoke-WebRequest -Uri "http://localhost:11434" -UseBasicParsing -TimeoutSec 2
+        Write-Output "Ollama server is running."
+    } catch {
+        Write-Output "Ollama server is not running."
+    }
+
+
 
 
 
