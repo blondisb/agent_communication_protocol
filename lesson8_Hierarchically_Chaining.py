@@ -1,27 +1,24 @@
 import asyncio
 import nest_asyncio
 from acp_sdk.client import Client
-from smolagents import LitleLLMModel
+from smolagents import LiteLLMModel
 from fastacp import AgentCollection, ACPCallingAgent
 from colorama import Fore
 
+import fastacp
+print(dir(fastacp))
 print(ACPCallingAgent.__doc__)
 
-# AgentCollection is going to structure our acp agents in a
-#  format that we're able to use them 
+# AgentCollection is going to structure our acp agents in a format that we're able to use them 
+# ACPCallingAgent is basically our router agents  automatically navigate to which acp agent is best to call to answer a question
+# Run the hierarchical workflow with the ACPCallingAgent and let it navigate automatically
 
-# ACPCallingAgent is basically our router agents 
-#  automatically navigate to which acp agent is best to call to answer a question
-
-# Run the hierarchical workflow with the ACPCallingAgent
-#  and let it navigate automatically
 nest_asyncio.apply()
 
 # Remember, we're goingo to use the ACP calling agent and let it navigate automatically
 # <>
 
-
-model = LitleLLMModel(
+model = LiteLLMModel(
     model_id = "groq/compound-beta"
 )
 
@@ -40,23 +37,21 @@ async def run_main_workflow() -> None:
         
         # Now, we'll define our ACPCallingAgent
         acpAgent = ACPCallingAgent(
-            agents=acp_agents,
+            acp_agents=acp_agents,
             model=model#,
             # name="Hierarchical ACP Agent",
             # description="This agent will navigate through the ACP agents to find the best answer."
         )
         
-        # result = await acpAgent.run_sync(
-        #     input="What is the best way to design a communication protocol for agents to communicate with each other and with humans?"
-        # )
         
-        result = await acpAgent.run_sync(
-            input="What is the best way to design a communication protocol for agents to communicate with each other and with humans?"
-            # Rembeber, each agent has its own input, so we may concatenate the inputs
-            # input="What is the best way to design a communication protocol for agents to communicate with each other and with humans? "
-            #       "Context: What is the best way to design a communication protocol for agents to communicate with each other and with humans?"
-            # for example, if first agent is a medic talking about worker medical recovery and second agent is a company lawyer talking about legal aspects for medic coverage,
+        result = await acpAgent.run(
+            "What is the best way to design a communication protocol for agents to communicate with each other and with humans?"
         )
+        # Rembeber, each agent has its own input, so we may concatenate the inputs
+        # input="What is the best way to design a communication protocol for agents to communicate with each other and with humans? "
+        #       "Context: What is the best way to design a communication protocol for agents to communicate with each other and with humans?"
+        # for example, if first agent is a medic talking about worker medical recovery and second agent is a company lawyer talking about legal aspects for medic coverage,
+        
         
         print(Fore.LIGHTMAGENTA_EX + f"Result from ACPCallingAgent: {result} " + Fore.RESET)
         
