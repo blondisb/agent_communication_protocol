@@ -18,16 +18,23 @@ client = Groq()
 server = Server()
 
 llm = LLM(
-    # model="groq/llama-3.3-70b-versatile",
-    model="groq/compound-beta",
-    max_tokens=1024
+    model="groq/meta-llama/llama-4-scout-17b-16e-instruct",
+    # model="groq/deepseek-r1-distill-llama-70b",
+    # model="groq/mistral-saba-24b",
+    # model = "ollama/deepseek-r1:1.5b",
+    # max_tokens=128,
+    max_completion_tokens = 1024
 )
 
 config = {
     "llm": {
         "provider": "groq",
+        # "provider": "ollama",
         "config": {
-            "model": "llama-3.3-70b-versatile",
+            "model": "groq/meta-llama/llama-4-scout-17b-16e-instruct",
+            # "model": "deepseek-r1-distill-llama-70b",
+            # "model": "groq/mistral-saba-24b",
+            # "model": "deepseek-r1:1.5b",
         }
     },
     "embedder": {
@@ -45,7 +52,8 @@ rag_tool = RagTool(
 )
 
 rag_tool.add(
-    "./pdf/doc.pdf",
+    # "./pdf/doc.pdf",
+    "./pdf/wine.pdf",
     data_type = "pdf_file"
 )
 
@@ -57,7 +65,7 @@ rag_tool.add(
 async def function_engineer_agent(input: list[Message]) -> AsyncGenerator[RunYield, RunYieldResume]:
     """
     This is an agent that determines whether an agent is secure or not, depending on the use case.
-    It uses a RAG pattern to find answers in a PDF document and provides a secure communication protocol for agents to communicate with each other and with humans.
+    It may uses ONLY a RAG pattern to find answers in a PDF document and provides a secure communication protocol for agents to communicate with each other and with humans.
     Use it to help answer questions on designing secure communication protocols for AI agents.
     """
 
@@ -69,7 +77,7 @@ async def function_engineer_agent(input: list[Message]) -> AsyncGenerator[RunYie
         allow_delegation = False,
         llm = llm,
         tools = [rag_tool],
-        max_retry_limits = 5
+        max_retry_limits = 1
     )
 
     task1 = Task(
@@ -94,6 +102,68 @@ async def function_engineer_agent(input: list[Message]) -> AsyncGenerator[RunYie
     # We have to use the yield method beacuse we're using a generator and also to comply with the ACP server requirements
     # The yield method will send the output to the ACP server, so that it can be used by other agents or humans
     # The output will be sent as a message part with the role "assistant"
+    print([MessagePart(content = str(task_output))])
+    print("---")
+    print([MessagePart(content = str(task_output), role="assistant")])
+
+    yield Message(
+        # parts = [MessagePart(content = str(task_output), role="assistant")],
+        parts = [MessagePart(content = str(task_output))]
+    )
+    
+    print(task_output)
+
+
+
+# The agent that we want to make available in our ACP server 
+# ACP makes the agent available trhoug the docstring, so we may to be specific about the function signature
+# and the docstring of the function, so that it can be used by other agents or humans in the ACP server.
+# The docstring should contain the description of the agent, its role, goal, backstory
+@server.agent()
+async def wine_expert_agent(input: list[Message]) -> AsyncGenerator[RunYield, RunYieldResume]:
+    """
+    This is an agent that determines which wine is the most appropiate for each dish.
+    It may uses ONLY  a RAG pattern to find availables wine in this restaurant. Those are in a PDF document and provides information about every kind of wine and grape.
+    Use it to help answer questions on designing secure communication protocols for AI agents.
+    If question is not about WINES, this agent respond: "CALL OTHER AGENT"
+    """
+
+    sommelierr_agent = Agent(
+        role = "wine expert sommelierr",
+        goal = "give an specific and very short recommendation of three types of wine and its brief description.",
+        backstory = "You are a swine expert sommelierr with expertise in every kind of wine, grape and cup (depending on dish and wine)",
+        verbose = True,
+        allow_delegation = False,
+        llm = llm,
+        tools = [rag_tool],
+        max_retry_limits = 1
+    )
+
+    task = Task(
+        #
+        # We don't need a fix prompt anymore. We may use a dynamic prompt unpacking from input messages
+        description = input[0].parts[0].content if input else "What is the best wine for a dinner with spaguetti and cheese. If i like sweet flavors?",
+        # If we have multiple prompts, we may loop over the input and create multiple tasks
+        # 
+        expected_output = "An specific recommendation of three types of wine",
+        agent = sommelierr_agent,
+    )
+
+    crew = Crew(
+        agents = [sommelierr_agent],
+        tasks = [task],
+        verbose = True
+    )
+
+    task_output = await crew.kickoff_async()
+    
+    # We have to use the yield method beacuse we're using a generator and also to comply with the ACP server requirements
+    # The yield method will send the output to the ACP server, so that it can be used by other agents or humans
+    # The output will be sent as a message part with the role "assistant"
+    print([MessagePart(content = str(task_output))])
+    print("---")
+    print([MessagePart(content = str(task_output), role="assistant")])
+
     yield Message(
         # parts = [MessagePart(content = str(task_output), role="assistant")],
         parts = [MessagePart(content = str(task_output))]
@@ -103,7 +173,7 @@ async def function_engineer_agent(input: list[Message]) -> AsyncGenerator[RunYie
     
 if __name__ == "__main__":
     # Start the server
-    server.run(port=8001)
+    server.run(port=8001, reload=True)
     
     
     # For execute the server in a python script, you may use the following command:

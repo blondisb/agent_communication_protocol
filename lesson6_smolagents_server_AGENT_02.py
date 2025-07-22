@@ -3,6 +3,7 @@ from collections.abc import AsyncGenerator
 from dotenv import load_dotenv, find_dotenv
 from acp_sdk.models import Message, MessagePart
 from acp_sdk.server import RunYield, RunYieldResume, Server
+from crewai import Crew, Task, Agent, LLM
 
 # Runyield and RunYieldResume are going to form part of
 # our async generator function that will be used to
@@ -10,7 +11,7 @@ from acp_sdk.server import RunYield, RunYieldResume, Server
 # And the server is going to form the context of our ACP server
 # that will be used to run the agent.
 
-from smolagents import CodeAgent, DuckDuckGoSearchTool, LiteLLMModel, VisitWebpageTool
+from smolagents import CodeAgent, DuckDuckGoSearchTool, LiteLLMModel, VisitWebpageTool, ToolCallingAgent
 
 # CodeAgent is a class that allows us to create an agent that can
 # generate code based on a given prompt.
@@ -26,9 +27,12 @@ client = Groq()
 server = Server()
 
 model = LiteLLMModel(
-    model_id = "groq/compound-beta",
+    # model_id = "groq/deepseek-r1-distill-llama-70b",
+    model_id = "groq/mistral-saba-24b",
     # model_id = "ollama/deepseek-r1:14b",
-    max_tokens = 2048
+    # model_id = "ollama/deepseek-r1:1.5b",
+    # api_base = "http://localhost:11434/api/embeddings",
+    max_tokens = 528
 )
 
 @server.agent()
@@ -53,19 +57,64 @@ async def designer_agent(input: list[Message]) -> AsyncGenerator[RunYield, RunYi
     #     yield RunYield(output=[MessagePart(content=response)])
 
     prompt = input[0].parts[0].content if input else "What is the best way to design a communication protocol for agents to communicate with each other and with humans?"
+    print("---", prompt)
+
     try:
-        response = agent.run(prompt)
+        response = agent.run(task=prompt, max_steps=1)
+        print("---", response)
+
         yield Message(
             parts = [MessagePart(content=str(response))]
         )
+
     except Exception as e:
+        print("xxx", e)
         yield Message(
             parts = [MessagePart(content=f"Error: {str(e)}")]
         )
 
+
+
+@server.agent()
+async def waiter_restaurant_agent(input: list[Message]) -> AsyncGenerator[RunYield, RunYieldResume]:
+    """
+    This is a CodeAgent which supports the restaurand to handle dishes based questions for customers.
+    Current or prospective customers can use it to find answers about their menu doubts".
+    This agent always response briefly.
+    """
+    # Create an instance of CodeAgent with the model and tools
+    # ToolCallingAgent
+    agent = CodeAgent (
+        model = model,
+        tools = [
+            DuckDuckGoSearchTool(),
+            VisitWebpageTool()
+        ]
+    )
+
+    # Can i drink wine with pasta and chesee?
+    prompt = input[0].parts[0].content if input else "What is the best pasta for mix with cheesee and tomatoes?"
+    print("---", prompt)
+
+    try:
+        response = agent.run(task=prompt, max_steps=1)
+        print("---", response)
+
+        yield Message(
+            parts = [MessagePart(content=str(response))]
+        )
+
+    except Exception as e:
+        print("xxx", e)
+        yield Message(
+            parts = [MessagePart(content=f"Error: {str(e)}")]
+        )
+
+
+
 if __name__ == "__main__":
     # Start the server
-    server.run(port=8000)
+    server.run(port=8000, reload=True)
     
     # For execute the server in a python script, you may use the following command:
     # python -m acp_sdk.server lesson6_smolagents_server.py
@@ -73,3 +122,4 @@ if __name__ == "__main__":
     # python lesson6_smolagents_server.py
     # or
     # python -m acp_sdk.server lesson6_smolagents_server.py --port 8000
+    # aa 

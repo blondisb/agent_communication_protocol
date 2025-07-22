@@ -10,9 +10,13 @@ from acp_sdk.models import (
     Message,
     MessagePart,
 )
-from pydantic import BaseModel
-import ast, inspect
+import logging
+import sys 
+from smolagents.models import ChatMessage as CTM2
 
+
+from dotenv import load_dotenv, find_dotenv
+load_dotenv(find_dotenv(), override=True)
 
 # === AgentCollection Implementation ===
 
@@ -92,7 +96,6 @@ class ChatMessage:
     content: Optional[str]
     tool_calls: Optional[List[ToolCall]] = None
     raw: Any = None
-
 
 class LogLevel(Enum):
     DEBUG = "debug"
@@ -210,50 +213,8 @@ class MultiStepAgent:
     
     def write_memory_to_messages(self):
         """Convert agent memory to a list of messages for the model."""
-        # Ensure all messages in input_messages are properly formatted as dictionaries
-        formatted_messages = []
-        
-        for message in self.input_messages:
-            if isinstance(message, dict):
-                # Message is already a dict, ensure proper format
-                formatted_msg = message.copy()
-                
-                # Ensure role exists
-                if "role" not in formatted_msg:
-                    formatted_msg["role"] = "user"  # Default role
-                
-                # Ensure content is properly formatted
-                if "content" in formatted_msg:
-                    content = formatted_msg["content"]
-                    if isinstance(content, str):
-                        formatted_msg["content"] = content  # Keep as string for now
-                    elif isinstance(content, list):
-                        # If it's already a list, extract text if needed
-                        if len(content) > 0 and isinstance(content[0], dict) and "text" in content[0]:
-                            formatted_msg["content"] = content[0]["text"]
-                        else:
-                            formatted_msg["content"] = str(content)
-                    else:
-                        formatted_msg["content"] = str(content)
-                else:
-                    formatted_msg["content"] = ""
-                    
-                formatted_messages.append(formatted_msg)
-                
-            elif hasattr(message, 'role') and hasattr(message, 'content'):
-                # Message is an object with role and content attributes
-                formatted_messages.append({
-                    "role": message.role,
-                    "content": str(message.content)
-                })
-            else:
-                # Fallback: treat as string content with user role
-                formatted_messages.append({
-                    "role": "user",
-                    "content": str(message)
-                })
-        
-        return formatted_messages
+        # Implementation would depend on memory structure
+        return self.input_messages
     
     async def step(self, memory_step: ActionStep) -> Union[None, Any]:
         """Perform one step in the agent's reasoning process."""
@@ -290,9 +251,6 @@ class ACPCallingAgent(MultiStepAgent):
         planning_interval: Optional[int] = None,
         **kwargs,
     ):
-        print("------\n\n", type(model))
-        print("------\n\n", model)
-        
         # Default prompt templates if none provided
         if prompt_templates is None:
             prompt_templates = {
@@ -381,6 +339,7 @@ class ACPCallingAgent(MultiStepAgent):
         self.logger.log(f"Saved to memory: {key}={value}", level=LogLevel.DEBUG)
 
 
+
     async def step(self, memory_step: ActionStep) -> Union[None, Any]:
         """
         Perform one step in the reasoning process: the agent thinks, calls ACP agents, and observes results.
@@ -388,122 +347,34 @@ class ACPCallingAgent(MultiStepAgent):
         """
         # Convert messages to LiteLLM format
         memory_messages = self.write_memory_to_messages()
+        # Make sure all messages are in the correct LiteLLM format
+        for i, message in enumerate(memory_messages):
+            if "content" in message and not isinstance(message["content"], list):
+                memory_messages[i]["content"] = [{"type": "text", "text": message["content"]}]
         
-        # Debug: Print message types and structure
-        print(f"--Debug: memory_messages type: {type(memory_messages)}")
-        for i, msg in enumerate(memory_messages):
-            print(f"  Message {i}: type={type(msg)}, keys={list(msg.keys()) if isinstance(msg, dict) else 'Not a dict'}")
-        
-        # Ensure all messages are properly formatted
-        formatted_messages = []
-        for message in memory_messages:
-            if isinstance(message, dict):
-                # If message is already a dict, ensure it has proper structure
-                formatted_msg = message.copy()
-                
-                # Ensure content is in the correct format
-                if "content" in formatted_msg:
-                    content = formatted_msg["content"]
-                    if isinstance(content, str):
-                        # Convert string content to list format
-                        formatted_msg["content"] = [{"type": "text", "text": content}]
-                    elif isinstance(content, list):
-                        # Content is already in list format, keep as is
-                        pass
-                    else:
-                        # Convert other types to string first
-                        formatted_msg["content"] = [{"type": "text", "text": str(content)}]
-                
-                formatted_messages.append(formatted_msg)
-            else:
-                # If message is not a dict, try to convert it
-                print(f"Warning: Found non-dict message: {type(message)}")
-                # Try to access as object attributes
-                try:
-                    if hasattr(message, 'role') and hasattr(message, 'content'):
-                        formatted_msg = {
-                            "role": message.role,
-                            "content": [{"type": "text", "text": str(message.content)}]
-                        }
-                        formatted_messages.append(formatted_msg)
-                    else:
-                        # Fallback: treat as string content with user role
-                        formatted_msg = {
-                            "role": "user",
-                            "content": [{"type": "text", "text": str(message)}]
-                        }
-                        formatted_messages.append(formatted_msg)
-                except Exception as e:
-                    print(f"Error processing message: {e}")
-                    continue
-        
-        self.input_messages = formatted_messages
-        memory_step.model_input_messages = formatted_messages.copy()
-
-        class FormattedMessage(BaseModel):
-                role: str
-                content: list
+        self.input_messages = memory_messages
+        memory_step.model_input_messages = memory_messages.copy()
 
         try:
-            raw_data = formatted_messages[0]
-            print("*** Tipo:", type(raw_data))
-            print("*** Contenido:", raw_data)
+            # BLBARRIOS EDIT XX
+            new_list = []
+            for msj in memory_messages:   
+                new_list.append(
+                    CTM2(
+                        role = msj['role'],
+                        content = msj['content']
+                    )
+                )
 
-            if isinstance(raw_data, dict):
-                parsed = FormattedMessage(**raw_data)
-            else:
-                raise ValueError("Se esperaba un dict en formatted_messages[0]")
-
-            # Acceso correcto a campos:
-            print("Rol:", parsed.role)
-            print("Primer texto:", parsed.content[0]["text"])
-
-            formatted_messages2 = parsed  # ⚠️ ya no es una lista
-            print("---fm2\t ", formatted_messages2.role)
-        except Exception as e:
-            print("\nFFF\n",e)
-            raise e
-
-
-        try:  
-            print("---\t", list(self.tools.values())[:-1])
-            print("---\t", ["Observation:", "Calling agents:"])
-
-            # Obtener la firma
-            sig = inspect.signature(self.model)
-
-            # Recorrer parámetros
-            for name, param in sig.parameters.items():
-                print(f"Nombre: {name}")
-                print(f"  Tipo anotado: {param.annotation}")
-                print(f"  Valor por defecto: {param.default}")
-            
-            model_message: ChatMessage = self.model(
-                formatted_messages,  # Use formatted_messages instead of memory_messages
+            model_message: CTM2 = self.model(
+                new_list,
                 tools_to_call_from=list(self.tools.values())[:-1],
-                stop_sequences=["Observation:", "Calling agents:"],
-            )      
-
-            # model_message = self.model(
-            #     formatted_messages[0],  # Use formatted_messages instead of memory_messages
-            #     tools_to_call_from=list(self.tools.values())[:-1],
-            #     stop_sequences=["Observation:", "Calling agents:"],
-            # )  
-
-            # if isinstance(model_message, dict):
-            #     model_message = ChatMessage(
-            #         content=model_message.get("content"),
-            #         tool_calls=model_message.get("tool_calls"),
-            #         raw=model_message
-            #     )
-
-
-            print("---\t", model_message)
-            print("---\txxxxxxxxxxxxxxxxxxxxxxx",)
+                stop_sequences=["Observation:", "Calling agents:"]
+            )
 
             memory_step.model_output_message = model_message
         except Exception as e:
-            print(f"Error details: {e}")
+            print("\n\n\n xxx3", e)
             raise AgentParsingError(f"Error while generating or parsing output:\n{e}", self.logger) from e
         
         self.logger.log_markdown(
@@ -512,7 +383,6 @@ class ACPCallingAgent(MultiStepAgent):
             level=LogLevel.DEBUG,
         )
         
-        # Rest of the method remains the same...
         # Check if the model called any tools/agents
         if not hasattr(model_message, 'tool_calls') or model_message.tool_calls is None or len(model_message.tool_calls) == 0:
             # If no tool calls, treat content as final answer

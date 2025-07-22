@@ -28,8 +28,8 @@ if __name__ == "__main__":
     asyncio.run(run_workflow())
     
     # For execute the client in a python script, you may use the following command:
-    # python -m acp_sd.client lesson6_client.py
+    # python -m acp_sd.client lesson7_client.py
     # or 
     # python lesson6_client.py
     # or
-    # python -m acp_sd.client lesson6_client.py --port 8000
+    # python -m acp_sd.client lesson7_client.py --port 8000

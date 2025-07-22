@@ -1,0 +1,8 @@
+memory_messages
+
+
+        print((model))
+        print((model))
+        print(type(model))
+        print(type(model))
+        print(type(model))
