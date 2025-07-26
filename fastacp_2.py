@@ -366,7 +366,7 @@ class ACPCallingAgent(MultiStepAgent):
                     )
                 )
 
-            model_message: CTM2 = self.model(
+            model_message: ChatMessage = self.model(
                 new_list,
                 tools_to_call_from=list(self.tools.values())[:-1],
                 stop_sequences=["Observation:", "Calling agents:"]
@@ -374,7 +374,9 @@ class ACPCallingAgent(MultiStepAgent):
 
             memory_step.model_output_message = model_message
         except Exception as e:
-            print("\n\n\n xxx3", e)
+            print(f"\n\n\n xxx3: \n--- {type(e).__name__}: \n--- {e.args} \n--- {str(e)}")
+            import traceback
+            traceback.print_exc()
             raise AgentParsingError(f"Error while generating or parsing output:\n{e}", self.logger) from e
         
         self.logger.log_markdown(
@@ -468,7 +470,7 @@ class ACPCallingAgent(MultiStepAgent):
         
         # Execute the tool call
         self.logger.log(
-            f"Calling agent: '{agent_name}' with arguments: {agent_arguments}",
+            f"\nCalling agent: '{agent_name}' with arguments: {agent_arguments}",
             level=LogLevel.INFO,
         )
         

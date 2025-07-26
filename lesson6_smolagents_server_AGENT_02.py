@@ -57,11 +57,11 @@ async def designer_agent(input: list[Message]) -> AsyncGenerator[RunYield, RunYi
     #     yield RunYield(output=[MessagePart(content=response)])
 
     prompt = input[0].parts[0].content if input else "What is the best way to design a communication protocol for agents to communicate with each other and with humans?"
-    print("---", prompt)
+    print("====================\n INPUT PROMPT:\n", prompt)
 
     try:
         response = agent.run(task=prompt, max_steps=1)
-        print("---", response)
+        print("====================\n AGENT RESPONSE:\n", response)
 
         yield Message(
             parts = [MessagePart(content=str(response))]
@@ -94,11 +94,11 @@ async def waiter_restaurant_agent(input: list[Message]) -> AsyncGenerator[RunYie
 
     # Can i drink wine with pasta and chesee?
     prompt = input[0].parts[0].content if input else "What is the best pasta for mix with cheesee and tomatoes?"
-    print("---", prompt)
+    print("====================\n INPUT PROMPT (agent waiter):\n", prompt)
 
     try:
         response = agent.run(task=prompt, max_steps=1)
-        print("---", response)
+        print("====================\n AGENT RESPONSE (agent waiter):\n", response)
 
         yield Message(
             parts = [MessagePart(content=str(response))]

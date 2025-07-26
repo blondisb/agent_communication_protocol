@@ -27,9 +27,10 @@ load_dotenv(find_dotenv(), override=True)  # Load API key from environment varia
 
 model = LiteLLMModel(
     # model_id = "groq/qwen/qwen3-32b"
-    # ,api_key='x'
     # model_id = "ollama/deepseek-r1:1.5b",
     model_id="groq/deepseek-r1-distill-llama-70b"
+    # ,api_key='x'
+
 )
 
 
@@ -45,14 +46,14 @@ async def run_main_workflow() -> None:
         }
         
         # Now, we'll define our ACPCallingAgent
-        acpAgent = ACPCallingAgent(
+        acp_agent_object = ACPCallingAgent(
             acp_agents=acp_agents,
             model=model#,
             # name="Hierarchical ACP Agent",
             # description="This agent will navigate through the ACP agents to find the best answer."
         )        
         
-        result = await acpAgent.run(
+        result = await acp_agent_object.run(
             "What is the best way to design a communication protocol for agents to communicate with each other and with humans?",
             max_steps=2
         )
@@ -75,9 +76,11 @@ async def run_main_workflow_version2() -> None:
                 'client': client
             } for client, agent in agent_collection.agents
         }
+
+        print("\n=======================\n\nAGENTS DISCOVERED:\n", acp_agents, "\n=======================\n")
         
         # Now, we'll define our ACPCallingAgent
-        acpAgent = ACPCallingAgent(
+        acp_agent_object = ACPCallingAgent(
             acp_agents=acp_agents,
             model=model
         )   
@@ -90,7 +93,7 @@ async def run_main_workflow_version2() -> None:
             wich wines are you available in your restaurant for combine with this dish?
         """     
         
-        result = await acpAgent.run(query=query, max_steps=10 )
+        result = await acp_agent_object.run(query=query, max_steps=5)
         print(Fore.LIGHTMAGENTA_EX + f"Result from ACPCallingAgent: {result} " + Fore.RESET)
         
 

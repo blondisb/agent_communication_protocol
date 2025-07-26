@@ -139,6 +139,8 @@ async def wine_expert_agent(input: list[Message]) -> AsyncGenerator[RunYield, Ru
         max_retry_limits = 1
     )
 
+    print("\n====================\n INPUT PROMPT:\n", input[0].parts[0].content)
+
     task = Task(
         #
         # We don't need a fix prompt anymore. We may use a dynamic prompt unpacking from input messages
@@ -160,9 +162,7 @@ async def wine_expert_agent(input: list[Message]) -> AsyncGenerator[RunYield, Ru
     # We have to use the yield method beacuse we're using a generator and also to comply with the ACP server requirements
     # The yield method will send the output to the ACP server, so that it can be used by other agents or humans
     # The output will be sent as a message part with the role "assistant"
-    print([MessagePart(content = str(task_output))])
-    print("---")
-    print([MessagePart(content = str(task_output), role="assistant")])
+    print("\n====================\n AGENT RESPONSE:\n", [MessagePart(content = str(task_output))])
 
     yield Message(
         # parts = [MessagePart(content = str(task_output), role="assistant")],
