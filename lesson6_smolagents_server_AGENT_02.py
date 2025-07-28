@@ -4,7 +4,7 @@ from dotenv import load_dotenv, find_dotenv
 from acp_sdk.models import Message, MessagePart
 from acp_sdk.server import RunYield, RunYieldResume, Server
 from crewai import Crew, Task, Agent, LLM
-
+import os
 # Runyield and RunYieldResume are going to form part of
 # our async generator function that will be used to
 # yield results back to the client.
@@ -28,11 +28,12 @@ server = Server()
 
 model = LiteLLMModel(
     # model_id = "groq/deepseek-r1-distill-llama-70b",
-    model_id = "groq/mistral-saba-24b",
-    # model_id = "ollama/deepseek-r1:14b",
-    # model_id = "ollama/deepseek-r1:1.5b",
+    # model_id = "groq/mistral-saba-24b",
     # api_base = "http://localhost:11434/api/embeddings",
-    max_tokens = 528
+    # max_tokens = 528
+    # ,api_key=os.environ.get("GROQ_API_KEY") ,api_base=os.environ.get("GROQ_API_BASE_V2")
+    model_id="ollama/qwen2.5:0.5b",
+    api_base = "http://localhost:11434"
 )
 
 @server.agent()
@@ -78,13 +79,13 @@ async def designer_agent(input: list[Message]) -> AsyncGenerator[RunYield, RunYi
 @server.agent()
 async def waiter_restaurant_agent(input: list[Message]) -> AsyncGenerator[RunYield, RunYieldResume]:
     """
-    This is a CodeAgent which supports the restaurand to handle dishes based questions for customers.
+    This is an agent which supports the restaurand to handle dishes based questions for customers.
     Current or prospective customers can use it to find answers about their menu doubts".
     This agent always response briefly.
     """
     # Create an instance of CodeAgent with the model and tools
     # ToolCallingAgent
-    agent = CodeAgent (
+    agent = ToolCallingAgent (
         model = model,
         tools = [
             DuckDuckGoSearchTool(),

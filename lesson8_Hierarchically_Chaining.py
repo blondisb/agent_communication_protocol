@@ -28,10 +28,16 @@ load_dotenv(find_dotenv(), override=True)  # Load API key from environment varia
 model = LiteLLMModel(
     # model_id = "groq/qwen/qwen3-32b"
     # model_id = "ollama/deepseek-r1:1.5b",
-    model_id="groq/deepseek-r1-distill-llama-70b"
-    # ,api_key='x'
-
+    # model_id="groq/deepseek-r1-distill-llama-70b"
+    # model_id="groq/llama-3.1-8b-instant"
+    model_id="groq/meta-llama/llama-4-scout-17b-16e-instruct"
+    # ,api_key=os.environ.get("GROQ_API_KEY")
+    # ,api_base=os.environ.get("GROQ_API_BASE_V2")
+    # ,api_key=""
+    ,api_base="https://api.groq.com/openai/v1"
 )
+
+print("\n======================\n, MODEL data: \n", model, model.kwargs, "\n")
 
 
 async def run_main_workflow() -> None:
@@ -77,7 +83,7 @@ async def run_main_workflow_version2() -> None:
             } for client, agent in agent_collection.agents
         }
 
-        print("\n=======================\n\nAGENTS DISCOVERED:\n", acp_agents, "\n=======================\n")
+        # print("\n=======================\n\nAGENTS DISCOVERED:\n", acp_agents, "\n=======================\n")
         
         # Now, we'll define our ACPCallingAgent
         acp_agent_object = ACPCallingAgent(
@@ -89,11 +95,13 @@ async def run_main_workflow_version2() -> None:
         #         talking about Sparkling wine, what to try?
         # """ 
 
-        query =  """What is the best pasta for mix with cheesee and tomatoes?, and
-            wich wines are you available in your restaurant for combine with this dish?
-        """     
+        query =  """What is the best pasta for mix with cheesee and tomatoes?, and wich wines are you available in your restaurant for combine with this dish?"""    
         
-        result = await acp_agent_object.run(query=query, max_steps=5)
+        result = await acp_agent_object.run(
+            query=query,
+            max_steps=10
+        )
+
         print(Fore.LIGHTMAGENTA_EX + f"Result from ACPCallingAgent: {result} " + Fore.RESET)
         
 

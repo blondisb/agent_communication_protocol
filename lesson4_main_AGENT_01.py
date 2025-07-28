@@ -18,8 +18,9 @@ client = Groq()
 server = Server()
 
 llm = LLM(
-    model="groq/meta-llama/llama-4-scout-17b-16e-instruct",
-    # model="groq/deepseek-r1-distill-llama-70b",
+    # model="groq/meta-llama/llama-4-scout-17b-16e-instruct",
+    model="groq/deepseek-r1-distill-llama-70b",
+    api_base="https://api.groq.com/openai/v1",
     # model="groq/mistral-saba-24b",
     # model = "ollama/deepseek-r1:1.5b",
     # max_tokens=128,
@@ -31,10 +32,12 @@ config = {
         "provider": "groq",
         # "provider": "ollama",
         "config": {
-            "model": "groq/meta-llama/llama-4-scout-17b-16e-instruct",
+            # "model": "groq/meta-llama/llama-4-scout-17b-16e-instruct",
+            "model" : "groq/deepseek-r1-distill-llama-70b",
             # "model": "deepseek-r1-distill-llama-70b",
             # "model": "groq/mistral-saba-24b",
             # "model": "deepseek-r1:1.5b",
+            # "api_base" : "https://api.groq.com/openai/v1/models",
         }
     },
     "embedder": {

@@ -27,3 +27,14 @@
         ]
     }
 ]
+
+
+
+
+
+
+
+
+
+
+ChatMessage(role='assistant', content=None, tool_calls=[ChatMessageToolCall(function=ChatMessageToolCallFunction(arguments='{"input":"best pasta for mix with cheesee and tomatoes"}', name='waiter_restaurant_agent', description=None), id='mpdjhqb4w', type='function')], raw=ModelResponse(id='chatcmpl-7ae20f24-a2d1-4e76-8362-e4e491793950', created=1753557459, model='meta-llama/llama-4-scout-17b-16e-instruct', object='chat.completion', system_fingerprint='fp_79da0e0073', choices=[Choices(finish_reason='tool_calls', index=0, message=Message(content=None, role='assistant', tool_calls=[ChatCompletionMessageToolCall(function=Function(arguments='{"input":"best pasta for mix with cheesee and tomatoes"}', name='waiter_restaurant_agent'), id='mpdjhqb4w', type='function')], function_call=None, provider_specific_fields=None))], usage=Usage(completion_tokens=34, prompt_tokens=2342, total_tokens=2376, completion_tokens_details=None, prompt_tokens_details=None, queue_time=0.194993347, prompt_time=0.079714223, completion_time=...
