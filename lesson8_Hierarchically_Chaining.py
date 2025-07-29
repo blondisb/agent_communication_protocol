@@ -30,14 +30,15 @@ model = LiteLLMModel(
     # model_id = "ollama/deepseek-r1:1.5b",
     # model_id="groq/deepseek-r1-distill-llama-70b"
     # model_id="groq/llama-3.1-8b-instant"
-    model_id="groq/meta-llama/llama-4-scout-17b-16e-instruct"
+    model_id="groq/moonshotai/kimi-k2-instruct"
+    # model_id="groq/meta-llama/llama-4-scout-17b-16e-instruct"
     # ,api_key=os.environ.get("GROQ_API_KEY")
     # ,api_base=os.environ.get("GROQ_API_BASE_V2")
     # ,api_key=""
     ,api_base="https://api.groq.com/openai/v1"
 )
 
-print("\n======================\n, MODEL data: \n", model, model.kwargs, "\n")
+# print("\n======================\n, MODEL data: \n", model, model.kwargs, "\n")
 
 
 async def run_main_workflow() -> None:

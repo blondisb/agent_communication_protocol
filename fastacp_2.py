@@ -306,7 +306,7 @@ class ACPCallingAgent(MultiStepAgent):
         acp_tools["final_answer"] = Tool(
             name="final_answer",
             description="Provide the final answer to the user's request",
-            inputs={"answer": "The final answer to provide to the user"},
+            inputs={"answer": {"type": "string", "description":"The final answer to provide to the user"}},
             output_type="str"
         )
         
@@ -370,12 +370,13 @@ class ACPCallingAgent(MultiStepAgent):
                     )
                 )
 
-            print("\n\nZZZ========================\n", new_list)
-            print("\n\nZZZ========================\n", list(self.tools.values())[:-1])
+            # print("\n\nZZZ========================\n", new_list)
+            # print("\n\nZZZ========================\n", list(self.tools.values())[:])
 
             model_message: ChatMessage = self.model(
                 new_list,
-                tools_to_call_from=list(self.tools.values())[:-1],
+                # tools_to_call_from=list(self.tools.values())[:-1],
+                tools_to_call_from=list(self.tools.values()),
                 stop_sequences=["Observation:", "Calling agents:"]
             )
 
