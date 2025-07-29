@@ -1,46 +1,51 @@
 graph TD
-style A5 fill:#fff3e0
-style A2 fill:#fff3e0
-style F3 fill:#fff3e0
-style od2 fill:red
-style od fill:green
-  
-  od>S T A R T ] --> A1
-  
-  subgraph sg0
-	  A1{Max step reached?}
-	  A1 --> |YES| ci0((RETURN <br> I wasn't able to  <br> complete this task))
-	  A1 --> |NO| A3[add memory contexto to input_messages]
-  end
-  
-  A3 --> A4[Create a new action step and execute it]
-  A4 --> A5
+    style A0 fill:#fff3e0, color:black
+    style A5 fill:#fff3e0, color:black
+    style C2 fill:#fff3e0, color:black
+    style od2 fill:red
+    style od fill:green
+    style bug fill:orange, color:black, stroke:Red
 
-	subgraph sg1
-	  A5[STEP] --> |Query| B[assistant: Deepseek]
-	  B--> |Query and Agent| C[memory_step.tool_calls]
-  end
-  
-  subgraph sg2
-	  C --> |tool: agent and query| C2[_process_tool_call]
-	  C2 --> |agent selected| D1{Agent is final_answer?}
-    D1--> |NO| D11[get tool from available tools, usign agent]
-	  D11 --> |tool, query| D2[execute tool]
-	  D2--> |agent, input| D[POST request to that Agent: self.client.run_sync]
-	  D--> |agent resp = observation| E[...save it to: memory_step.observations !!!]
-	  E--> ci1((return <br> None))
-	  D1 --> |YES| ci2((return <br> final_answer))
-  end
-  
+    od>S T A R T ] -----> |query| A0[ACPCallingAgent object <br> RUN]
 
-  
-  F2{Result is None?} --> |NO| F3[return Result]
-  
-  ci1 --> F2
-  ci2 --> F2
-  F2 --> |YES| A5 --> G[add memory_setp to input_messages]
-  G--> A1
-  
-  ci0 --> od2>E N D ]
-  F3 --> od2
-  
+    subgraph sg0
+        A0 --> A1{Max step reached?}
+        A1 --> |YES| ci0((RETURN <br> I wasn't able to  <br> complete this task))
+        A1 --> |NO| A3[add memory contexto to input_messages]
+        A3 --> A4[Create a new action step and execute it]
+    end
+
+    A4 --> |memory_step: <br> Observations, Model_output_msj| A5
+
+    subgraph sg1
+        A5[STEP] --> |list with memory| B[assistant: Deepseek]
+        A5 <--> bug((BUG <br> READING <br> MEMORY)) <--> B
+        B--> |Query and Agent| C[memory_step.tool_calls]
+    end
+
+    subgraph sg2
+        C --> |tool: agent and query| C2[_process_tool_call]
+        C2 --> |agent selected| D1{Agent is final_answer?}
+        D1--> |NO| D11[get tool from available tools, usign agent]
+        D11 --> |tool, query| D2[execute tool]
+        D2--> |agent, input| D[POST request to that Agent: self.client.run_sync]
+        D--> |agent resp = observation| E[...save it to: memory_step.observations !!!]
+        E--> ci1((return <br> None))
+        D1 --> |YES| ci2((return <br> final_answer))
+    end
+
+    F2{Result is None?} --> |NO| F3((return Result))
+
+    ci1 --> F2
+    ci2 --> F2
+    F2 --> |YES| G[add memory_setp to input_messages]
+    G --> G2{memory_step.<br>model_output_message.<br>content <br><br> is None?}
+    G2 --> |YES| G2A[add content as USER role]
+    G2 --> |NO| G2B[add content as ASSISTANT role]
+
+    G2A--> G3[continue]
+    G2B--> G3
+    G3 --> A1
+
+    ci0 -----> od2>E N D ]
+    F3 -----> od2

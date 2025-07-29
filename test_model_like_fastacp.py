@@ -2,6 +2,7 @@ from smolagents.models import LiteLLMModel, ChatMessage, Model
 from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv(), override=True)
 
+
 def model1(model_id, max_tokens):
  # This test requires actual API credentials and should be run separately
     model = LiteLLMModel(model_id=model_id, max_tokens=max_tokens)
@@ -66,13 +67,30 @@ def model2(model_id, max_tokens):
 
 
 
+def model3(model_id, max_tokens):
+    from lists_of_chat_calls_with_model import step2
+    model = LiteLLMModel(model_id=model_id, max_tokens=max_tokens, api_base="https://api.groq.com/openai/v1")
+
+    new_list = []
+
+    for msj in step2:   
+        new_list.append(
+            ChatMessage(
+                role = msj['role'],
+                content = msj['content']
+            )
+        )
+        return model.generate(messages=new_list)
+
+
 if __name__ == "__main__":
 
     model_id="groq/deepseek-r1-distill-llama-70b"
-    max_tokens=128
+    max_tokens=1024
 
     # result = model1(model_id, max_tokens)
-    result = model2(model_id, max_tokens)
+    # result = model2(model_id, max_tokens)
+    result = model3(model_id, max_tokens)
     print("\n\n\n---------------------------------------",type(result))
     print(result)
 

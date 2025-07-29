@@ -260,12 +260,16 @@ class ACPCallingAgent(MultiStepAgent):
 
                 Your task is to:
                 1. Analyze the user's request
-                2. Call the appropriate agent(s) to gather information
+                1.1 Check all system's messages content for agents responses in 'Current memory state'
+                1.2 If the user's request was answered completely, jump to the third instruction of this prompt; otherwise, continue with the second instruction
+                2. Call the appropriate agent(s) to gather information. But don't call the same agent more than once
                 3. When you have a complete answer, ALWAYS call the final_answer tool with your response
                 4. Do not provide answers directly in your messages - always use the final_answer tool
                 5. If you have sufficient information to complete a task do not call out to another agent unless required
 
                 Remember:
+                - Don't call the same agent more than once
+                - If you find a response for it user query or subquery, go to the next one, and find it specific agent 
                 - Always use the final_answer tool when you have a complete answer
                 - Do not provide answers in your regular messages
                 - Chain multiple agent calls if needed to gather all required information
@@ -365,6 +369,9 @@ class ACPCallingAgent(MultiStepAgent):
                         content = msj['content']
                     )
                 )
+
+            print("\n\nZZZ========================\n", new_list)
+            print("\n\nZZZ========================\n", list(self.tools.values())[:-1])
 
             model_message: ChatMessage = self.model(
                 new_list,

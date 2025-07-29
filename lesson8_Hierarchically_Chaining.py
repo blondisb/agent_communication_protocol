@@ -95,11 +95,11 @@ async def run_main_workflow_version2() -> None:
         #         talking about Sparkling wine, what to try?
         # """ 
 
-        query =  """What is the best pasta for mix with cheesee and tomatoes?, and wich wines are you available in your restaurant for combine with this dish?"""    
+        query =  """What is the best pasta for combine with cheesee and tomatoes?, and wich wines are you available in your restaurant for combine with this dish?"""    
         
         result = await acp_agent_object.run(
             query=query,
-            max_steps=10
+            max_steps=5
         )
 
         print(Fore.LIGHTMAGENTA_EX + f"Result from ACPCallingAgent: {result} " + Fore.RESET)
