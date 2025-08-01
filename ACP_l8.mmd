@@ -18,7 +18,7 @@ graph TD
     A4 --> |memory_step: <br> Observations, Model_output_msj| A5
 
     subgraph sg1
-        A5[STEP] --> |list with memory| B[assistant: Deepseek]
+        A5[STEP] --> |list with memory <br> and <br> list with tools, except <br> final_tool <br> *I added it later*| B[assistant: Deepseek]
         A5 <--> bug((BUG <br> READING <br> MEMORY)) <--> B
         B--> |Query and Agent| C[memory_step.tool_calls]
     end

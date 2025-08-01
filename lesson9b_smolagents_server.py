@@ -14,7 +14,7 @@ from crewai import Crew, Task, Agent, LLM
 # that will be used to run the agent.
 
 from smolagents import CodeAgent, DuckDuckGoSearchTool, LiteLLMModel, VisitWebpageTool, ToolCallingAgent, ToolCollection
-from mcp import StdioServeParameters
+from mcp import StdioServerParameters
 # CodeAgent is a class that allows us to create an agent that can
 # generate code based on a given prompt.
 # DuckDuckGoSearchTool is a tool that allows us to search the web
@@ -25,23 +25,32 @@ from mcp import StdioServeParameters
 # and extract information from it.
 
 load_dotenv(find_dotenv(), override=True)  # Load API key from environment variable
-client = Groq()
 server = Server()
 
 model = LiteLLMModel(
-    # model_id = "groq/deepseek-r1-distill-llama-70b",
-    model_id = "groq/mistral-saba-24b",
+    # model_id = "groq/deepseek-r1-distill-llama-70b"
+    model_id="groq/moonshotai/kimi-k2-instruct"
+    # model_id = "groq/mistral-saba-24b"
     # model_id = "ollama/deepseek-r1:14b",
     # model_id = "ollama/deepseek-r1:1.5b",
     # api_base = "http://localhost:11434/api/embeddings",
-    max_tokens = 528
+    # ,api_key=""
+    ,api_base="https://api.groq.com/openai/v1"
+    ,max_tokens = 528
 )
 
 
 # the full command or arg is:   UV run MCP server.py
-server_parameters = StdioServeParameters(
+server_parameters = StdioServerParameters(
+    command = r"C:/Mega/Courses/DeeplearningAI/venvAI/Scripts/python.exe", #first part of command to acces the MCP server
+    args = ["C:/Mega/Courses/DeeplearningAI/agent_communication_protocol/lesson9a_adding_MCP_server.py"],  # allows us to run and acces our list doctors tool inside mcpServer
+    env=None
+)
+
+# the full command or arg is:   UV run MCP server.py
+server_parameters = StdioServerParameters(
     command = "uv", #first part of command to acces the MCP server
-    args = ["run", "lesson9_adding_MCP_server.py"],  # allows us to run and acces our list doctors tool inside mcpServer
+    args = ["run", "lesson9a_adding_MCP_server.py"],  # allows us to run and acces our list doctors tool inside mcpServer
     env=None
 )
 
@@ -54,8 +63,16 @@ async def doctor_agent(input: list[Message]) -> AsyncGenerator[RunYield, RunYiel
     with ToolCollection.from_mcp(server_parameters, trust_remote_code=True) as tool_collection:
         agent = ToolCallingAgent(tools = [*tool_collection.tools], model=model)
         prompt = input[0].parts[0].content
+
+        print(
+            "\n===========================\n BEFORE RUN \n:",
+            [*tool_collection.tools],
+            "\n", agent, "\n", prompt
+        )
+
         response = agent.run(prompt)
         
+    print("\n===========================\n YIELD \n:", Message(parts=[MessagePart(content=str(response))]))
     yield Message(parts=[MessagePart(content=str(response))])
 
 
@@ -94,13 +111,9 @@ async def waiter_restaurant_agent(input: list[Message]) -> AsyncGenerator[RunYie
             parts = [MessagePart(content=f"Error: {str(e)}")]
         )
 
-
-
-
-
 if __name__ == "__main__":
     # Start the server
-    server.run(port=8000, reload=True)
+    server.run(port=8002, reload=True)
     
     # For execute the server in a python script, you may use the following command:
     # python -m acp_sdk.server lesson6_smolagents_server.py

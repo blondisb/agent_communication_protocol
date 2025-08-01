@@ -2,12 +2,8 @@ from colorama import Fore
 from mcp.server.fastmcp import FastMCP
 import json
 import requests
-
-
 # MCP Server is going to return a lisst of doctors in United States
 # <>
-
-
 mcp = FastMCP("doctorserver")
 
 @mcp.tool()
@@ -22,7 +18,8 @@ def list_doctors(state:str) -> str:
         str: a list of doctors that may be near you
         Example Response "{"DOC001":{"name":"Dr Jhon James", "specialty":"Cardiology"...}...}"
     """
-    
+    print(f"🟢 Processing state: {state}", flush=True)
+
     url = 'https://raw.githubusercontent.com/nicknochnack/ACPWalkthrough/refs/heads/main/doctors.json'
     resp = requests.get(url)
     doctors = json.loads(resp.text)
@@ -31,4 +28,10 @@ def list_doctors(state:str) -> str:
     return str(matches)
 
 if __name__ == "__main__":
-    mcp.run(transport="stdio")
+    try:
+        print("🟢 doctor_server.py started", flush=True)
+        mcp.run(transport="sse")
+        # mcp.run(transport="stdio")
+    except Exception as e:
+        print(e)
+        raise e
